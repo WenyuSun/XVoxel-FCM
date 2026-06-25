@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+data/
+output/
+eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Conda
+.pixi/
+
+# Virtual environments (any .venv prefix)
+.venv*
+
+# Documentation (local only, not in repo)
+doc/
+
+# References (local only, not in repo)
+references/
+
+# Generated output
+*.pkl
+output/*.png
+output/*.pdf
+
+# GitHub config (local only, not in repo)
+.github/
+
+# Output / temp
+output/*.png
+output/*.pdf
+*.tmp
