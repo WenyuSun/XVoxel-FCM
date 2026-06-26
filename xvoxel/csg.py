@@ -92,20 +92,28 @@ class Boolean(Feature):
             return np.max(stacked * signs[:, None], axis=0)
 
 
-def classify_sdfs(sdf_vals: np.ndarray, tol: float = 1e-8) -> np.ndarray:
+def classify_sdfs(sdf_vals: np.ndarray, min_half_dim: float = 0.1) -> np.ndarray:
     """
-    批量 SDF 分类 (模块级纯函数).
+    批量 SDF 分类 (模块级纯函数) — 与旧版 occupancy-based 算法对齐.
+
+    旧版算法: 对每个 feature 单独判断:
+        sdf <= -min_half_dim → occupancy=1 (完全占据)
+        -min_half_dim < sdf < 0 → occupancy=0 (部分占据/边界)
+    对 CSG UNION 树, min(sdf_i) 等价于逐 feature 判断的 union.
 
     Args:
         sdf_vals: (N,) SDF 值数组.
-        tol: SDF 容差, |sdf| <= tol 视为边界.
+        min_half_dim: 体素最小半尺寸 = min(dx,dy,dz)*0.5, 默认 0.1 兼容旧版.
 
     Returns:
         (N,) int8 数组: +1=内部 (solid), 0=边界 (boundary), -1=外部 (void).
     """
     result = np.full_like(sdf_vals, -1, dtype=np.int8)
-    result[sdf_vals < -tol] = 1         # 内部 (solid)
-    result[np.abs(sdf_vals) <= tol] = 0  # 边界 (boundary)
+    # 关键: 与旧版对齐 — sdf <= -min_half_dim → 完全占据 (solid)
+    result[sdf_vals <= -min_half_dim] = 1
+    # -min_half_dim < sdf < 0 → 边界 (与旧版 occupancy=0 一致)
+    boundary_mask = (sdf_vals > -min_half_dim) & (sdf_vals < 0)
+    result[boundary_mask] = 0
     return result
 
 

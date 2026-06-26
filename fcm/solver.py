@@ -55,7 +55,7 @@ class FCMSolver:
         self.alpha = alpha
 
     def add_dirichlet_bc(self, face_name: str, dof_spec: str, value: float = 0.0):
-        """添加 Dirichlet 边界条件 (仅对非 void 单元的节点).
+        """添加 Dirichlet 边界条件 (与旧版一致: 固定 face 上所有节点).
 
         Args:
             face_name: 'xmin'/'xmax'/'ymin'/'ymax'/'zmin'/'zmax'
@@ -64,18 +64,7 @@ class FCMSolver:
         """
         all_dofs = get_face_fixed_dofs(self.mesh, face_name)
 
-        # 过滤到非 void 单元的节点
-        solid_mask = self.voxel_nature != -1
-        non_void_node_set = set()
-        for eid in np.where(solid_mask)[0]:
-            for nid in self.mesh.elems[eid]:
-                non_void_node_set.add(int(nid))
-        non_void_nodes = np.array(sorted(non_void_node_set), dtype=np.int32)
-        non_void_dofs = set()
-        for nid in non_void_nodes:
-            non_void_dofs.update([nid*3, nid*3+1, nid*3+2])
-
-        # 根据 dof_spec 过滤自由度
+        # 根据 dof_spec 过滤自由度 (不过滤 void 节点 — 与旧版一致)
         active = np.zeros(3, dtype=bool)
         if 'ux' in dof_spec:
             active[0] = True
@@ -86,15 +75,14 @@ class FCMSolver:
 
         filtered_dofs = []
         for d in all_dofs:
-            if d in non_void_dofs and active[d % 3]:
+            if active[d % 3]:
                 filtered_dofs.append(d)
 
-        if filtered_dofs:
-            dofs = np.array(filtered_dofs, dtype=np.int32)
-            vals = np.full(len(dofs), value, dtype=np.float64)
-            self.fixed_dofs.append(dofs)
-            self.prescribed_vals.append(vals)
-            print(f"  Dirichlet BC '{face_name}' [{dof_spec}]: {len(dofs)} DOFs fixed (filtered from {len(all_dofs)})")
+        dofs = np.array(filtered_dofs, dtype=np.int32)
+        vals = np.full(len(dofs), value, dtype=np.float64)
+        self.fixed_dofs.append(dofs)
+        self.prescribed_vals.append(vals)
+        print(f"  Dirichlet BC '{face_name}' [{dof_spec}]: {len(dofs)} DOFs fixed")
 
     def add_traction_bc(self, face_name: str, traction: Tuple[float, float, float]):
         """添加面牵引力 BC.

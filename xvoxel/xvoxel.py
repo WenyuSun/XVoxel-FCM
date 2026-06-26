@@ -64,6 +64,9 @@ class XVoxelModel:
         # 体素分类结果
         self.voxel_nature = np.full(self.n_voxels, -1, dtype=np.int8)
 
+        # 体素分类阈值: 与旧版 occupancy-based 算法对齐
+        self.min_half_dim = min(self.dx, self.dy, self.dz) * 0.5
+
     # ---------- 索引 ----------
     def _idx(self, i: int, j: int, k: int) -> int:
         return k * self.nx * self.ny + j * self.nx + i
@@ -224,11 +227,13 @@ class XVoxelModel:
             if idx is None or len(idx) == 0:
                 return
             self.voxel_nature[idx] = classify_sdfs(
-                self.csg_root.sdf_batch(self._voxel_centers[idx])
+                self.csg_root.sdf_batch(self._voxel_centers[idx]),
+                self.min_half_dim,
             )
         else:
             self.voxel_nature = classify_sdfs(
-                self.csg_root.sdf_batch(self._voxel_centers)
+                self.csg_root.sdf_batch(self._voxel_centers),
+                self.min_half_dim,
             )
 
     def _update_voxel_nature_for_indices(self, idx: np.ndarray) -> None:
@@ -237,7 +242,8 @@ class XVoxelModel:
             self.voxel_nature[idx] = -1
         else:
             self.voxel_nature[idx] = classify_sdfs(
-                self.csg_root.sdf_batch(self._voxel_centers[idx])
+                self.csg_root.sdf_batch(self._voxel_centers[idx]),
+                self.min_half_dim,
             )
 
     # ---------- CSG 树操作 (内部) ----------
