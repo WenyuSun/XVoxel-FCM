@@ -1,0 +1,23 @@
+# Fig 7 回归测试容差配置
+# 数值保真红线: 重构/向量化不得使结果超出以下容差.
+# 仅当算法逻辑有意变更时才可放宽, 且必须在 PR 中说明理由.
+
+displacement:
+  # max|u| 绝对差 (mm)
+  abs_tol: 1.0e-9
+  # max|u| 相对差
+  rel_tol_pct: 0.001
+
+stress:
+  # max von Mises 绝对差 (MPa)
+  abs_tol: 1.0
+  # max von Mises 相对差
+  rel_tol_pct: 0.5
+
+voxel_classification:
+  # 体素分类必须完全一致 (不允许任何差异)
+  exact_match: true
+
+u_norm:
+  # 位移范数相对差
+  rel_tol_pct: 0.001
