@@ -44,6 +44,15 @@ references/
 output/*.png
 output/*.pdf
 
+# Figures: ignore all generated figures EXCEPT canonical example results
+# (tracked so they render in README on GitHub)
+figures/*
+!figures/fig7_lshape_von_mises.png
+!figures/fig7_lshape_radius_edit.png
+!figures/channel_flow_validation.png
+!figures/cylinder_flow_Re20.png
+!figures/cylinder_flow_Re40.png
+
 # GitHub config (local only, not in repo)
 .github/
 

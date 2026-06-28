@@ -67,8 +67,8 @@ def run_fig7_new() -> list:
 
         K = solver.assemble(alpha=ALPHA, max_depth=MAX_DEPTH)
 
-        # Traction (与 compare_fig7.py 共享手动计算)
-        from examples.compare_fig7 import compute_traction_force
+        # Traction (与回归测试共享手动计算, 原则 P1)
+        from tests.baselines._fig7_traction import compute_traction_force
         csg = xv.csg_root
 
         def _pmc_new(x, y, z, eid):
@@ -92,8 +92,8 @@ def run_fig7_new() -> list:
 
         u = spsolve(K.tocsr() if hasattr(K, 'tocsr') else K, F)
 
-        # Von Mises (中心 Gauss 点, 与 compare_fig7.py 一致)
-        from src.fem_base import hex8_shape_grad
+        # Von Mises (中心 Gauss 点, 与回归测试一致)
+        from fcm.elements import hex8_shape_grad
         mesh = solver.mesh
         c_mat = E / ((1 + NU) * (1 - 2 * NU))
         D = np.array([

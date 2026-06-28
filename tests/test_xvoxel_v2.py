@@ -115,14 +115,19 @@ class TestCSG:
     """Test CSG tree and classify_sdfs."""
 
     def test_classify_sdfs(self):
-        """classify_sdfs correctly classifies solid/boundary/void."""
+        """classify_sdfs correctly classifies solid/boundary/void.
+
+        算法 (xvoxel/csg.py): ``sdf <= -min_half_dim`` → solid (+1),
+        ``-min_half_dim < sdf < 0`` → boundary (0), ``sdf >= 0`` → void (-1).
+        默认 ``min_half_dim=0.1``. 注意 sdf=0 恰在界面上, 归为 void.
+        """
         sdf_vals = np.array([-1.0, -1e-10, 0.0, 1e-10, 1.0])
         result = classify_sdfs(sdf_vals)
-        assert result[0] == 1   # solid
-        assert result[1] == 0   # boundary
-        assert result[2] == 0   # boundary
-        assert result[3] == 0   # boundary
-        assert result[4] == -1  # void
+        assert result[0] == 1   # solid (sdf=-1 <= -0.1)
+        assert result[1] == 0   # boundary (-0.1 < -1e-10 < 0)
+        assert result[2] == -1  # void (sdf=0, 恰在界面, 归 void)
+        assert result[3] == -1  # void (sdf>0)
+        assert result[4] == -1  # void (sdf=1)
 
     def test_boolean_union(self):
         """Boolean UNION = min of children."""
