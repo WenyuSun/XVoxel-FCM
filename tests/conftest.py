@@ -8,6 +8,13 @@ _repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _repo_root not in sys.path:
     sys.path.insert(0, _repo_root)
 
+
+def pytest_configure(config):
+    """注册自定义 mark."""
+    config.addinivalue_line(
+        "markers", "slow: 标记慢测试 (如圆柱绕流全流程, 默认可 -m 'not slow' 跳过)"
+    )
+
 import pytest
 import numpy as np
 
