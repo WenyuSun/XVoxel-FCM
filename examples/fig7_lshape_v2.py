@@ -7,9 +7,23 @@ examples/fig7_lshape_v2.py — L型支架 (Phase 1 重构版)
 BC: 顶面固定, 右侧面向下牵引力 100 N/mm².
 """
 import time
+import os
+import sys
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+# 确保从仓库根目录导入
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
 from xvoxel import XVoxelModel, Cube, RoundCorner2D
 from fcm import FCMSolver
+
+FIG_DIR = os.path.join(_REPO_ROOT, 'figures')
+os.makedirs(FIG_DIR, exist_ok=True)
 
 # ============================================================
 # 模型参数 (论文 Fig 7)
@@ -123,7 +137,56 @@ def main():
     for r in results:
         print(f"  {r['radius']:8.1f}  {r['max_u']:12.6f}  {r['max_vm']:12.4f}")
 
+    # 保存结果图
+    _save_figures(xv, solver, vm, results)
+
     print("\nDone.")
+
+
+def _save_figures(xv, solver, vm, results):
+    """保存 von Mises 应力云图 (最终步) 与半径编辑收敛曲线."""
+    centers = xv._voxel_centers  # (n_voxels, 3)
+    nature = xv.voxel_nature
+
+    # --- 图 1: 最终步 (R=2) von Mises 应力云图 (xy 平面, z=0 切片) ---
+    z_mid = 0.0
+    z_tol = xv.dz * 0.5
+    mask = (np.abs(centers[:, 2] - z_mid) < z_tol) & (nature != -1)
+    fig, ax = plt.subplots(figsize=(7, 6))
+    sc = ax.scatter(centers[mask, 0], centers[mask, 1],
+                    c=vm[mask], cmap='jet', s=60, edgecolors='k',
+                    linewidths=0.3)
+    ax.set_xlabel('x (mm)')
+    ax.set_ylabel('y (mm)')
+    ax.set_title(f'Fig 7 L-Shape — von Mises stress (R={results[-1]["radius"]:.0f} mm)')
+    ax.set_aspect('equal')
+    fig.colorbar(sc, ax=ax, label='σ_vm (MPa)')
+    fig.tight_layout()
+    path = os.path.join(FIG_DIR, 'fig7_lshape_von_mises.png')
+    fig.savefig(path, dpi=120)
+    plt.close(fig)
+    print(f"  Saved: {path}")
+
+    # --- 图 2: 半径编辑序列 — max|u| 与 max σ_vm 随 R 变化 ---
+    radii = [r['radius'] for r in results]
+    max_u = [r['max_u'] for r in results]
+    max_vm = [r['max_vm'] for r in results]
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.5))
+    ax1.plot(radii, max_u, 'o-', color='C0')
+    ax1.set_xlabel('Fillet radius R (mm)')
+    ax1.set_ylabel('Max |u| (mm)')
+    ax1.set_title('Max displacement vs fillet radius')
+    ax1.grid(True, alpha=0.3)
+    ax2.plot(radii, max_vm, 's-', color='C3')
+    ax2.set_xlabel('Fillet radius R (mm)')
+    ax2.set_ylabel('Max σ_vm (MPa)')
+    ax2.set_title('Max von Mises stress vs fillet radius')
+    ax2.grid(True, alpha=0.3)
+    fig.tight_layout()
+    path = os.path.join(FIG_DIR, 'fig7_lshape_radius_edit.png')
+    fig.savefig(path, dpi=120)
+    plt.close(fig)
+    print(f"  Saved: {path}")
 
 
 if __name__ == '__main__':

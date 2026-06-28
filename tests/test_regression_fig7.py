@@ -69,9 +69,9 @@ def _run_fig7_new():
     from xvoxel import XVoxelModel, Cube, RoundCorner2D
     from fcm import FCMSolver
     from fcm.boundary import apply_dirichlet
+    from fcm.elements import hex8_shape_grad
     from scipy.sparse.linalg import spsolve
-    from examples.compare_fig7 import compute_traction_force
-    from src.fem_base import hex8_shape_grad
+    from tests.baselines._fig7_traction import compute_traction_force
 
     cfg = GOLDEN['config']
     radii = cfg['RADII']
